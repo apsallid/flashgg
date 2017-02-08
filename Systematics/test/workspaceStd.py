@@ -9,6 +9,13 @@ import os
 # SYSTEMATICS SECTION
 dropVBFInNonGold = False  # for 2015 only!
 
+dumpJetSysTrees = True
+
+if dumpJetSysTrees:
+    dumpSysTreeMode = 2 #VBF
+else:
+    dumpSysTreeMode = 0
+
 process = cms.Process("FLASHggSyst")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -234,7 +241,44 @@ elif customize.processId == "Data":
 else:
     print "Background MC, so store mgg and central only"
     variablesToUse = minimalNonSignalVariables
-    customizeSystematicsForBackground(process)
+    if dumpJetSysTrees and customize.doSystematics:
+        print "Running jet systematics and putting them in ntuples because doJetSystTrees is set"
+        for direction in ["Up","Down"]:
+            phosystlabels.append("MvaShift%s01sigma" % direction)
+#            phosystlabels.append("MvaLinearSyst%s01sigma" % direction)
+            phosystlabels.append("SigmaEOverEShift%s01sigma" % direction)
+            phosystlabels.append("MaterialCentral%s01sigma" % direction)
+            phosystlabels.append("MaterialForward%s01sigma" % direction)
+            phosystlabels.append("FNUFEB%s01sigma" % direction)
+            phosystlabels.append("FNUFEE%s01sigma" % direction)
+            jetsystlabels.append("JEC%s01sigma" % direction)
+            jetsystlabels.append("JER%s01sigma" % direction)
+            jetsystlabels.append("RMSShift%s01sigma" % direction)
+            #metsystlabels.append("metUncertainty%s01sigma" % direction)
+            variablesToUse.append("UnmatchedPUWeight%s01sigma[1,-999999.,999999.] := weight(\"UnmatchedPUWeight%s01sigma\")" % (direction,direction))
+            variablesToUse.append("MvaLinearSyst%s01sigma[1,-999999.,999999.] := weight(\"MvaLinearSyst%s01sigma\")" % (direction,direction))
+            variablesToUse.append("LooseMvaSF%s01sigma[1,-999999.,999999.] := weight(\"LooseMvaSF%s01sigma\")" % (direction,direction))
+            variablesToUse.append("PreselSF%s01sigma[1,-999999.,999999.] := weight(\"PreselSF%s01sigma\")" % (direction,direction))
+            variablesToUse.append("electronVetoSF%s01sigma[1,-999999.,999999.] := weight(\"electronVetoSF%s01sigma\")" % (direction,direction))
+            variablesToUse.append("TriggerWeight%s01sigma[1,-999999.,999999.] := weight(\"TriggerWeight%s01sigma\")" % (direction,direction))
+            variablesToUse.append("FracRVWeight%s01sigma[1,-999999.,999999.] := weight(\"FracRVWeight%s01sigma\")" % (direction,direction))
+            variablesToUse.append("ElectronWeight%s01sigma[1,-999999.,999999.] := weight(\"ElectronWeight%s01sigma\")" % (direction,direction))
+            variablesToUse.append("MuonWeight%s01sigma[1,-999999.,999999.] := weight(\"MuonWeight%s01sigma\")" % (direction,direction))
+            variablesToUse.append("JetBTagCutWeight%s01sigma[1,-999999.,999999.] := weight(\"JetBTagCutWeight%s01sigma\")" % (direction,direction))
+            for r9 in ["HighR9","LowR9"]:
+                for region in ["EB","EE"]:
+                    phosystlabels.append("ShowerShape%s%s%s01sigma"%(r9,region,direction))
+#                    phosystlabels.append("MCSmear%s%s%s01sigma" % (r9,region,direction))
+                    phosystlabels.append("MCScale%s%s%s01sigma" % (r9,region,direction))
+                    for var in ["Rho","Phi"]:
+                        phosystlabels.append("MCSmear%s%s%s%s01sigma" % (r9,region,var,direction))
+        systlabels += phosystlabels
+        systlabels += jetsystlabels
+        #systlabels += metsystlabels
+#        customizeSystematicsForMC(process)
+    else:
+        print "Background MC, so store mgg and central only"
+        customizeSystematicsForBackground(process)
 
 print "--- Systematics  with independent collections ---"
 print systlabels
@@ -260,8 +304,9 @@ from flashgg.MetaData.samples_utils import SamplesManager
 
 process.source = cms.Source ("PoolSource",
                              fileNames = cms.untracked.vstring(
-"root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/cmshgg/ferriff/flashgg/RunIISpring16DR80X-2_3_0-25ns_Moriond17_MiniAODv2/2_3_0/DoubleEG/RunIISpring16DR80X-2_3_0-25ns_Moriond17_MiniAODv2-2_3_0-v0-Run2016B-23Sep2016-v2/161114_162452/0000/myMicroAODOutputFile_10.root"
+#"root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/cmshgg/ferriff/flashgg/RunIISpring16DR80X-2_3_0-25ns_Moriond17_MiniAODv2/2_3_0/DoubleEG/RunIISpring16DR80X-2_3_0-25ns_Moriond17_MiniAODv2-2_3_0-v0-Run2016B-23Sep2016-v2/161114_162452/0000/myMicroAODOutputFile_10.root"
 #"root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/cmshgg/sethzenz/flashgg/RunIISummer16-2_4_1-25ns_Moriond17/2_4_1/VHToGG_M120_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16-2_4_1-25ns_Moriond17-2_4_1-v0-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/170114_094407/0000/myMicroAODOutputFile_19.root"
+"root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/cmshgg/sethzenz/flashgg/RunIISummer16-2_4_1-25ns_Moriond17/2_4_1/GJet_Pt-20toInf_DoubleEMEnriched_MGG-40to80_TuneCUETP8M1_13TeV_Pythia8/RunIISummer16-2_4_1-25ns_Moriond17-2_4_1-v0-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/170114_083232/0000/myMicroAODOutputFile_83.root"
 #"root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/cmshgg/sethzenz/flashgg/RunIISummer16-2_4_1-25ns_Moriond17/2_4_1/ttHToGG_M125_13TeV_powheg_pythia8_v2/RunIISummer16-2_4_1-25ns_Moriond17-2_4_1-v0-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/170114_093929/0000/myMicroAODOutputFile_1.root"
 #"root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/cmshgg/sethzenz/flashgg/RunIISummer16-2_4_1-25ns_Moriond17/2_4_1/VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8/RunIISummer16-2_4_1-25ns_Moriond17-2_4_1-v0-RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/170114_094103/0000/myMicroAODOutputFile_1.root"
 #"root://eoscms.cern.ch//eos/cms/store/group/phys_higgs/cmshgg/ferriff/flashgg/RunIISpring16DR80X-2_2_0-25ns_ICHEP16_MiniAODv2/2_2_0/VBFHToGG_M125_13TeV_amcatnlo_pythia8/RunIISpring16DR80X-2_2_0-25ns_ICHEP16_MiniAODv2-2_2_0-v0-RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14_ext2-v1/160707_150558/0000/myMicroAODOutputFile_25.root"
@@ -326,16 +371,27 @@ elif customize.tthTagsOnly:
         ]
 else:
     tagList=[
-        ["UntaggedTag",4],
-        ["VBFTag",3],
-        ["ZHLeptonicTag",0],
-        ["WHLeptonicTag",0],
-        ["VHLeptonicLooseTag",0],
-        ["VHMetTag",0],
-        ["VHHadronicTag",0],
-        ["TTHHadronicTag",0],
-        ["TTHLeptonicTag",0]
+#        ["UntaggedTag",4],
+        ["VBFTag",0],
+#        ["ZHLeptonicTag",0],
+#        ["WHLeptonicTag",0],
+#        ["VHLeptonicLooseTag",0],
+#        ["VHMetTag",0],
+#        ["VHHadronicTag",0],
+#        ["TTHHadronicTag",0],
+#        ["TTHLeptonicTag",0]
         ]
+
+# get the variable list
+import flashgg.Taggers.VBFTagVariables as var
+met_variables = [
+    "metpt      := met.pt",
+    "metpx      := met.px",
+    "metpy      := met.py",
+    "metphi      := met.phi"
+    ]
+all_variables = var.dijet_variables + var.dipho_variables + met_variables # + ["met      := ?met.size>0? met.at(0).NoShift : -1"]
+variablesToUse += all_variables 
 
 definedSysts=set()
 process.tagsDumper.classifierCfg.remap=cms.untracked.VPSet()

@@ -102,6 +102,7 @@ flashggVBFTag = cms.EDProducer("FlashggVBFTagProducer",
                                MVAResultTag=cms.InputTag('flashggDiPhotonMVA'),
                                VBFDiPhoDiJetMVAResultTag=cms.InputTag('flashggVBFDiPhoDiJetMVA'),
                                VBFMVAResultTag=cms.InputTag('flashggVBFMVA'),
+                               METTag=cms.InputTag('flashggMets'),   
                                GenParticleTag=cms.InputTag( "flashggPrunedGenParticles" ),
                                GenJetTag = cms.InputTag("slimmedGenJets"),
                                #Boundaries=cms.vdouble(0.21,0.6,0.81)

@@ -4,6 +4,7 @@
 #include "flashgg/DataFormats/interface/DiPhotonCandidate.h"
 #include "flashgg/DataFormats/interface/DiPhotonMVAResult.h"
 #include "flashgg/DataFormats/interface/TagTruthBase.h"
+#include "flashgg/DataFormats/interface/VBFMVAResult.h"
 
 namespace flashgg {
 
@@ -61,6 +62,9 @@ namespace flashgg {
         DiPhotonTagBase::tag_t otherTagType( unsigned i ) const { return otherTagTypes_[i]; }
         int otherTagCategory( unsigned i ) const { return otherTagCategories_[i]; }
         int otherTagDiPhotonIndex ( unsigned i ) const { return otherTagIndices_[i]; }
+        //This is for the error when running other tags except VBFTag
+         const VBFMVAResult VBFMVA() const { return VBFMVAResult(); }
+
     private:
         DiPhotonMVAResult mva_result_;
         int category_number_;

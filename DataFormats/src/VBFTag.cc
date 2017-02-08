@@ -26,6 +26,11 @@ VBFTag::VBFTag( edm::Ptr<DiPhotonCandidate> dipho, DiPhotonMVAResult mvares, VBF
     }
 }
 
+//void VBFTag::setMet( edm::Ptr<pat::MET> met )
+void VBFTag::setMet( edm::Ptr<flashgg::Met> met )
+{
+    theMet_ = met;
+}
 
 const VBFDiPhoDiJetMVAResult VBFTag::VBFDiPhoDiJetMVA() const
 {

@@ -5,6 +5,8 @@
 #include "flashgg/DataFormats/interface/DiPhotonTagBase.h"
 #include "flashgg/DataFormats/interface/VBFDiPhoDiJetMVAResult.h"
 #include "flashgg/DataFormats/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
+#include "flashgg/DataFormats/interface/Met.h"
 
 namespace flashgg {
 
@@ -18,6 +20,11 @@ namespace flashgg {
         
         VBFTag( edm::Ptr<DiPhotonCandidate>, edm::Ptr<DiPhotonMVAResult>, edm::Ptr<VBFDiPhoDiJetMVAResult> );
         VBFTag( edm::Ptr<DiPhotonCandidate>, DiPhotonMVAResult, VBFDiPhoDiJetMVAResult );
+
+        //        const edm::Ptr<pat::MET> met() const {return theMet_;}
+        const edm::Ptr<flashgg::Met> met() const {return theMet_;}
+        //void setMet( edm::Ptr<pat::MET> );
+        void setMet( edm::Ptr<flashgg::Met> );
         
         const VBFDiPhoDiJetMVAResult VBFDiPhoDiJetMVA() const;
         const VBFMVAResult VBFMVA() const ;
@@ -77,6 +84,8 @@ namespace flashgg {
 
     private:
         VBFDiPhoDiJetMVAResult vbfDiPhoDiJet_mva_result_;
+        //        edm::Ptr<pat::MET> theMet_;
+        edm::Ptr<flashgg::Met> theMet_;
 
         float alphaUp_;
         float alphaDown_;

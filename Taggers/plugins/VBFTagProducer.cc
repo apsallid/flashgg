@@ -14,6 +14,8 @@
 #include "flashgg/DataFormats/interface/VBFTagTruth.h"
 
 #include "DataFormats/Common/interface/RefToPtr.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
+#include "flashgg/DataFormats/interface/Met.h"
 
 #include "flashgg/DataFormats/interface/PDFWeightObject.h"
 
@@ -41,6 +43,8 @@ namespace flashgg {
         EDGetTokenT<View<VBFDiPhoDiJetMVAResult> > vbfDiPhoDiJetMvaResultToken_;
         EDGetTokenT<View<VBFMVAResult> >           vbfMvaResultToken_;
         EDGetTokenT<View<DiPhotonMVAResult> >      mvaResultToken_;
+        //        EDGetTokenT<View<pat::MET> >               METToken_;
+        EDGetTokenT<View<flashgg::Met> > METToken_;
         EDGetTokenT<View<reco::GenParticle> >      genPartToken_;
         EDGetTokenT<View<reco::GenJet> >           genJetToken_;
         edm::EDGetTokenT<vector<flashgg::PDFWeightObject> > WeightToken_;
@@ -59,6 +63,8 @@ namespace flashgg {
         diPhotonToken_( consumes<View<flashgg::DiPhotonCandidate> >( iConfig.getParameter<InputTag> ( "DiPhotonTag" ) ) ),
         vbfDiPhoDiJetMvaResultToken_( consumes<View<flashgg::VBFDiPhoDiJetMVAResult> >( iConfig.getParameter<InputTag> ( "VBFDiPhoDiJetMVAResultTag" ) ) ),
         mvaResultToken_( consumes<View<flashgg::DiPhotonMVAResult> >( iConfig.getParameter<InputTag> ( "MVAResultTag" ) ) ),
+        //        METToken_( consumes<View<pat::MET> >( iConfig.getParameter<InputTag> ( "METTag" ) ) ),
+        METToken_( consumes<View<flashgg::Met> >( iConfig.getParameter<InputTag> ( "METTag" ) ) ),        
         genPartToken_( consumes<View<reco::GenParticle> >( iConfig.getParameter<InputTag> ( "GenParticleTag" ) ) ),
         genJetToken_ ( consumes<View<reco::GenJet> >( iConfig.getParameter<InputTag> ( "GenJetTag" ) ) ),
         WeightToken_( consumes<vector<flashgg::PDFWeightObject> >( iConfig.getUntrackedParameter<InputTag>( "WeightTag", InputTag( "flashggPDFWeightObject" ) ) ) ),
@@ -96,6 +102,15 @@ namespace flashgg {
         
         Handle<View<flashgg::VBFDiPhoDiJetMVAResult> > vbfDiPhoDiJetMvaResults;
         evt.getByToken( vbfDiPhoDiJetMvaResultToken_, vbfDiPhoDiJetMvaResults );
+
+        //Handle<View<pat::MET> > METs;
+        Handle<View<flashgg::Met> > METs;
+        evt.getByToken( METToken_, METs );
+
+        if( METs->size() != 1 )
+        { std::cout << "WARNING number of MET is not equal to 1" << std::endl; }
+        //Ptr<pat::MET> theMET = METs->ptrAt( 0 );
+        Ptr<flashgg::Met> theMET = METs->ptrAt( 0 );
 
         Handle<View<reco::GenParticle> > genParticles;
         Handle<View<reco::GenJet> > genJets;
@@ -163,6 +178,11 @@ namespace flashgg {
             tag_obj.setSystLabel    ( systLabel_ );
 
             tag_obj.includeWeights( *dipho );
+
+            //calculate met
+            //std::cout << "Met: " << theMET->pt() << std::endl;
+            tag_obj.setMet( theMET );
+
             if ( tag_obj.VBFMVA().dijet_Mjj > 0. ) {
 
                 // We don't want to include all the jet weights because btag weights are not relevant
@@ -275,7 +295,8 @@ namespace flashgg {
                 continue;
             }
 
-            int catnum = chooseCategory( vbfdipho_mvares->vbfDiPhoDiJetMvaResult );
+            // int catnum = chooseCategory( vbfdipho_mvares->vbfDiPhoDiJetMvaResult );
+            int catnum = 0;
             tag_obj.setCategoryNumber( catnum );
             unsigned int index_gp_leadjet = std::numeric_limits<unsigned int>::max();
             unsigned int index_gp_subleadjet = std::numeric_limits<unsigned int>::max();
@@ -524,11 +545,17 @@ namespace flashgg {
                           << " dijet_Mjj=" << tag_obj.VBFMVA().dijet_Mjj << std::endl;
                 */
 
-                VBFpresel = ( tag_obj.VBFMVA().dijet_LeadJPt > 30. 
-                                && tag_obj.VBFMVA().dijet_SubJPt > 20. 
-                                && tag_obj.VBFMVA().leadPho_PToM > (1./3) 
-                                && tag_obj.VBFMVA().sublPho_PToM > (1./4) 
-                                && tag_obj.VBFMVA().dijet_Mjj > 250. );
+                VBFpresel = ( tag_obj.VBFMVA().dijet_LeadJPt > 30.
+                              && tag_obj.VBFMVA().dijet_SubJPt > 20.
+                              && fabs( tag_obj.leadingJet().eta() ) < 4.7
+                              && fabs( tag_obj.subLeadingJet().eta() ) < 4.7
+                              && fabs( tag_obj.leadingJet().eta() - tag_obj.subLeadingJet().eta() ) > 2.0
+                              && tag_obj.VBFMVA().VBFMVAValue() > 0.2
+                              && tag_obj.diPhotonMVA().leadmva > 0.
+                              && tag_obj.diPhotonMVA().subleadmva > 0.
+                              && tag_obj.VBFMVA().leadPho_PToM > (1./3)
+                              && tag_obj.VBFMVA().sublPho_PToM > (1./4)
+                              && tag_obj.VBFMVA().dijet_Mjj > 150. );
 
                 //                std::cout << "  VBFpresel=" << VBFpresel << std::endl;
             }
