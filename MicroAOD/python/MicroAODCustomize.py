@@ -128,31 +128,30 @@ class MicroAODCustomize(object):
             self.customizePuppi(process)
         if self.processType == "data":
             self.customizeData(process)
-            if "Mu" in customize.datasetName:
+            if "Mu" in self.datasetName:
                 self.customizeDataMuons(process)
         elif "sig" in self.processType.lower():
+            print "In sig ", self.datasetName.lower()
             self.customizeSignal(process)
-            if "tth" in customize.datasetName.lower():
+            if "tth" in self.datasetName.lower():
                 self.customizeTTH(process)
-            elif "vh" in customize.datasetName.lower() or "wmh" in customize.datasetName.lower() or "wph" in customize.datasetName.lower() or "wh" in customize.datasetName.lower() or "zh" in customize.datasetName.lower():
+            elif "vh" in self.datasetName.lower() or "wmh" in self.datasetName.lower() or "wph" in self.datasetName.lower() or "wh" in self.datasetName.lower() or "zh" in self.datasetName.lower():
                 self.customizeVH(process)
-            elif "ggh" in customize.datasetName.lower() or "glugluh" in customize.datasetName.lower():
+            elif "ggh" in self.datasetName.lower() or "glugluh" in self.datasetName.lower():
                 self.customizeGGH(process)
-            elif "vbf" in customize.datasetName.lower():
+            elif "vbf" in self.datasetName.lower():
                 self.customizeVBF(process)
-            elif "thq" in customize.datasetName.lower() or "thw" in customize.datasetName.lower():
+            elif "thq" in self.datasetName.lower() or "thw" in self.datasetName.lower():
                 self.customizeTH(process)
-            elif "hh" in customize.datasetName.lower():
+            elif "hh" in self.datasetName.lower():
                 self.customizeHH(process)
-            elif "rsgrav" in customize.datasetName.lower() or "glugluspin" in customize.datasetName.lower() or "gg_m" in customize.datasetName.lower() or "addgrav" in customize.datasetName.lower():
-                self.customizeRS(process)
-            elif "" in customize.datasetName.lower():
+            elif "rsgrav" in self.datasetName.lower() or "glugluspin" in self.datasetName.lower() or "gg_m" in self.datasetName.lower() or "addgrav" in self.datasetName.lower():
                 self.customizeRS(process)
             else:
                 raise Exception,"processType=sig but datasetName does not contain recognized production mechanism - see MicroAODCustomize.py"
         if self.processType == "background" or self.processType == "bkg":
             self.customizeBackground(process)
-            if "thq" in customize.datasetName.lower() or "thw" in customize.datasetName.lower():
+            if "thq" in self.datasetName.lower() or "thw" in self.datasetName.lower():
                 raise Exception,"TH samples should now be classfied as signal - see MicroAODCustomize.py"
         if self.debug == 1:
             self.customizeDebug(process)
@@ -160,9 +159,9 @@ class MicroAODCustomize(object):
             self.customizeHLT(process)
         if self.muMuGamma == 1:
             self.customizeMuMuGamma(process)
-        elif self.muMuGamma == 2 and ("DY" in customize.datasetName or "DoubleMuon" in customize.datasetName):
+        elif self.muMuGamma == 2 and ("DY" in self.datasetName or "DoubleMuon" in self.datasetName):
             self.customizeMuMuGamma(process)
-        if "DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8" in customize.datasetName:
+        if "DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8" in self.datasetName:
             self.customizePDFs(process)
         if self.processType == 'data':
             self.globalTag = self.metaConditions["globalTags"]["data"]
@@ -313,7 +312,9 @@ class MicroAODCustomize(object):
 
         ###---Add HLT filter as first step of MicroAOD sequence
         if self.addMicroAODHLTFilter:
-            process.triggerFilterModule = getMicroAODHLTFilter(customize.datasetName, self.metaConditions)
+            print "="*40
+            print self.datasetName
+            process.triggerFilterModule = getMicroAODHLTFilter(self.datasetName, self.metaConditions)
             if process.triggerFilterModule:
                 process.p = cms.Path(process.triggerFilterModule*process.p._seq)
                 process.p1 = cms.Path(process.triggerFilterModule*process.p1._seq)
@@ -548,10 +549,10 @@ class MicroAODCustomize(object):
         for xsecFile in cross_sections:
             fname = os.path.expanduser( os.path.expandvars(xsecFile) )
             cross_sections_.update( json.loads( open(fname).read() ) )
-        if customize.datasetName.count("/"):
-            dsName = customize.datasetName.split("/")[1]
+        if self.datasetName.count("/"):
+            dsName = self.datasetName.split("/")[1]
         else:
-            dsName = customize.datasetName
+            dsName = self.datasetName
         if dsName in cross_sections_.keys() :
             xsec_info = cross_sections_[dsName]
             if "LHESourceName" in xsec_info.keys() :
